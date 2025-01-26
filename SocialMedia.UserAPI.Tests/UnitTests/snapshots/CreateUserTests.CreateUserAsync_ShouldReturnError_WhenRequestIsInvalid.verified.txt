@@ -1,0 +1,4 @@
+﻿{
+  Success: false,
+  ErrorMessage: Failed to create user
+}
