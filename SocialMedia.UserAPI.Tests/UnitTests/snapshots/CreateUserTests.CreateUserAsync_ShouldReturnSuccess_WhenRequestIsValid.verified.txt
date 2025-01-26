@@ -1,0 +1,8 @@
+﻿{
+  User: {
+    Username: johndoe,
+    DisplayName: John Doe,
+    JoinedDate: DateTime_1
+  },
+  Success: true
+}
