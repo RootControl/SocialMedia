@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	FilePathRoot = "./app/static"
+	AppPathRoot = "./app/static"
+	AdminPathRoot = "./app/admin"
 	Port = "8080"
 )
 
@@ -15,13 +16,16 @@ func main() {
 	serverMux := http.NewServeMux()
 	apiConfig := ac.NewApiConfig()
 
-	staticFilesHandler := http.StripPrefix("/app", http.FileServer(http.Dir(FilePathRoot)))
-
+	// Front-end handlers
+	staticFilesHandler := http.StripPrefix("/app", http.FileServer(http.Dir(AppPathRoot)))
 	serverMux.Handle("/app/", apiConfig.MiddlewareMetricsIncrement(staticFilesHandler))
 
+	// Internal administrative use
+	serverMux.HandleFunc("GET /admin/metrics", apiConfig.ApiHitsHandler)
+	serverMux.HandleFunc("POST /admin/reset", apiConfig.ResetHitsHandler)
+
+	// Back-end handlers
 	serverMux.HandleFunc("GET /api/healthz", appReadinessHandler)
-	serverMux.HandleFunc("GET /api/metrics", apiConfig.ApiHitsHandler)
-	serverMux.HandleFunc("GET /api/reset", apiConfig.ResetHitsHandler)
 
 	server := http.Server{
 		Addr: ":" + Port,

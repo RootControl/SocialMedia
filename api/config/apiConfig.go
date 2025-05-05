@@ -1,9 +1,9 @@
 package apiConfig
 
 import (
-	"fmt"
 	"net/http"
 	"sync/atomic"
+	"text/template"
 )
 
 type ApiConfig struct {
@@ -19,15 +19,21 @@ func (ac *ApiConfig) MiddlewareMetricsIncrement(next http.Handler) http.Handler 
 		ac.FileServerHits.Add(1)
 		next.ServeHTTP(w, r)
 	})
-
-	return next
 }
 
 func (ac *ApiConfig) ApiHitsHandler(response http.ResponseWriter, request *http.Request) {
-	response.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	response.WriteHeader(http.StatusOK)
+	response.Header().Add("Content-Type", "text/html; charset=utf-8")
 
-	response.Write([]byte(fmt.Sprintf("Hits: %d", ac.FileServerHits.Load())))
+	template, err := template.ParseFiles("./app/admin/metrics/hits.html")
+	if err != nil {
+		http.Error(response, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+	
+	response.WriteHeader(http.StatusOK)
+	data := struct { Hits uint32 }{ Hits: ac.FileServerHits.Load() }
+
+	template.Execute(response, data)
 }
 
 func (ac *ApiConfig) ResetHitsHandler(response http.ResponseWriter, request *http.Request) {
