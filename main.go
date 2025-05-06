@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 
 	ac "github.com/RootControl/SocialMedia/api/config"
@@ -26,6 +28,7 @@ func main() {
 
 	// Back-end handlers
 	serverMux.HandleFunc("GET /api/healthz", appReadinessHandler)
+	serverMux.HandleFunc("POST /api/validate-message", validateMessageHandler)
 
 	server := http.Server{
 		Addr: ":" + Port,
@@ -39,4 +42,48 @@ func appReadinessHandler(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	response.WriteHeader(http.StatusOK)
 	response.Write([]byte(http.StatusText(http.StatusOK)))
+}
+
+func validateMessageHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	request := struct{ Body string }{}
+	errorResponse := struct{ Error string }{}
+	response := struct{ Valid bool }{ Valid: true }
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&request)
+
+	if err != nil {
+		errorResponse.Error = err.Error()
+		log.Print(err.Error())
+		respondWithJSON(w, http.StatusInternalServerError, errorResponse)
+
+	} else if len(request.Body) == 0 {
+		errorResponse.Error = "Not able to read the message"
+		log.Print(errorResponse.Error)
+		respondWithJSON(w, http.StatusBadRequest, errorResponse)
+
+
+	} else if len(request.Body) > 140 {
+		errorResponse.Error = "Message is too long"
+		log.Print(errorResponse.Error)
+		respondWithJSON(w, http.StatusBadRequest, errorResponse)
+
+	} else {
+		respondWithJSON(w, http.StatusOK, response)
+	}
+}
+
+func respondWithJSON(w http.ResponseWriter, statusCode int, payload any) error {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(statusCode)
+	w.Write(response)
+	return nil
 }

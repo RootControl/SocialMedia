@@ -42,3 +42,5 @@ func (ac *ApiConfig) ResetHitsHandler(response http.ResponseWriter, request *htt
 	response.WriteHeader(http.StatusOK)
 	response.Write([]byte("Hits reset to 0"))
 }
+
+
