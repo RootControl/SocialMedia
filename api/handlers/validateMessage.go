@@ -8,20 +8,20 @@ import (
 	"github.com/RootControl/SocialMedia/api/utils"
 )
 
-type Request struct {
-	Body string
-} 
-
-type Error struct {
-	Error string
-}
-
-type Response struct {
-	Valid bool
-}
-
 func ValidateMessageHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	type Request struct {
+		Body string
+	} 
+
+	type Error struct {
+		Error string
+	}
+
+	type Response struct {
+		Valid bool
+	}
 
 	request := Request{}
 

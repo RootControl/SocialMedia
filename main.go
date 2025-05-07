@@ -27,6 +27,7 @@ func main() {
 	// Back-end handlers
 	serverMux.HandleFunc("GET /api/healthz", handlers.AppReadinessHandler)
 	serverMux.HandleFunc("POST /api/validate-message", handlers.ValidateMessageHandler)
+	serverMux.HandleFunc("POST /api/replace-profane-message", handlers.ReplaceProfaneWordsHandler)
 
 	server := http.Server{
 		Addr: ":" + Port,
