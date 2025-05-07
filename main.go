@@ -1,10 +1,15 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
+	"os"
 
 	ac "github.com/RootControl/SocialMedia/api/config"
 	"github.com/RootControl/SocialMedia/api/handlers"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 const (
@@ -13,8 +18,19 @@ const (
 )
 
 func main() {
+	godotenv.Load()
+	dbUrl := os.Getenv("DB_URL")
+
+	db, err := sql.Open("postgres", dbUrl)
+	if err != nil {
+		log.Printf("error loading database: %s", err.Error())
+		return 
+	}
+	defer db.Close()
+
 	serverMux := http.NewServeMux()
 	apiConfig := ac.NewApiConfig()
+	baseHandler := handlers.NewBaseHandler(db)
 
 	// Front-end handlers
 	staticFilesHandler := http.StripPrefix("/app", http.FileServer(http.Dir(AppPathRoot)))
@@ -28,6 +44,7 @@ func main() {
 	serverMux.HandleFunc("GET /api/healthz", handlers.AppReadinessHandler)
 	serverMux.HandleFunc("POST /api/validate-message", handlers.ValidateMessageHandler)
 	serverMux.HandleFunc("POST /api/replace-profane-message", handlers.ReplaceProfaneWordsHandler)
+	serverMux.HandleFunc("POST /api/users", baseHandler.CreateNewUserHandler)
 
 	server := http.Server{
 		Addr: ":" + Port,
