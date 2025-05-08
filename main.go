@@ -41,10 +41,9 @@ func main() {
 	serverMux.HandleFunc("POST /admin/reset", apiConfig.ResetHitsHandler)
 
 	// Back-end handlers
-	serverMux.HandleFunc("GET /api/healthz", handlers.AppReadinessHandler)
-	serverMux.HandleFunc("POST /api/validate-message", handlers.ValidateMessageHandler)
-	serverMux.HandleFunc("POST /api/replace-profane-message", handlers.ReplaceProfaneWordsHandler)
+	serverMux.HandleFunc("GET /api/healthz", baseHandler.AppReadinessHandler)
 	serverMux.HandleFunc("POST /api/users", baseHandler.CreateNewUserHandler)
+	serverMux.HandleFunc("POST /api/messages", baseHandler.SaveUserMessageHandler)
 
 	server := http.Server{
 		Addr: ":" + Port,

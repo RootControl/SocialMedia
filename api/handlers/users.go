@@ -2,27 +2,27 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
-
-	"github.com/RootControl/SocialMedia/api/utils"
 )
 
 func (b *BaseHandler) CreateNewUserHandler(w http.ResponseWriter, r *http.Request) {
 	request := struct { Email string `json:"email"`}{}
+	var badRequest BadRequest
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&request)
 	if err != nil {
-		log.Printf("error decoding JSON: %s", err.Error())
-		utils.RespondWithJSON(w, http.StatusInternalServerError, request)
+		badRequest.Error = "error parsing JSON"
+		b.sendResponseToClient(w, http.StatusInternalServerError, err.Error(), badRequest)
 	}
 
 	user, err := b.DbQueries.CreateUser(r.Context(), request.Email)
 	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		utils.RespondWithJSON(w, http.StatusInternalServerError, request)
+		badRequest.Error = "error creating user"
+		b.sendResponseToClient(w, http.StatusInternalServerError, err.Error(), badRequest)
 	}
 
-	utils.RespondWithJSON(w, http.StatusCreated, user)
+	logMessage := fmt.Sprintf("user %v created", user.ID)
+	b.sendResponseToClient(w, http.StatusCreated, logMessage, user)
 }
