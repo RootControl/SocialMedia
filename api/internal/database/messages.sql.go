@@ -11,6 +11,56 @@ import (
 	"github.com/google/uuid"
 )
 
+const getMessage = `-- name: GetMessage :one
+select id, body, user_id, created_at, updated_at from messages where id = $1
+`
+
+func (q *Queries) GetMessage(ctx context.Context, id uuid.UUID) (Message, error) {
+	row := q.db.QueryRowContext(ctx, getMessage, id)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.Body,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getMessages = `-- name: GetMessages :many
+select id, body, user_id, created_at, updated_at from messages
+`
+
+func (q *Queries) GetMessages(ctx context.Context) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, getMessages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Message
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.Body,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const saveMessage = `-- name: SaveMessage :one
 INSERT INTO messages (id, body, user_id, created_at, updated_at)
 VALUES (gen_random_uuid(), $1, $2, now(), now())

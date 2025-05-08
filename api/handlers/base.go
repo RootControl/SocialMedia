@@ -30,7 +30,9 @@ func (b * BaseHandler) sendResponseToClient(w http.ResponseWriter, statusCode in
 		log.Printf("error parsing to JSON: %s\n", err.Error())
 	}
 
-	log.Print(logMessage)
+	if logMessage != "" {
+		log.Print(logMessage)
+	}
 
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Access-Control-Allow-Origin", "*")

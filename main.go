@@ -43,7 +43,10 @@ func main() {
 	// Back-end handlers
 	serverMux.HandleFunc("GET /api/healthz", baseHandler.AppReadinessHandler)
 	serverMux.HandleFunc("POST /api/users", baseHandler.CreateNewUserHandler)
+
 	serverMux.HandleFunc("POST /api/messages", baseHandler.SaveUserMessageHandler)
+	serverMux.HandleFunc("GET /api/messages", baseHandler.GetMessagesHandler)
+	serverMux.HandleFunc("GET /api/messages/{id}", baseHandler.GetMessageByIdHandler)
 
 	server := http.Server{
 		Addr: ":" + Port,
