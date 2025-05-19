@@ -7,22 +7,54 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
-insert into users (id, email, created_at, updated_at)
-values (gen_random_uuid(), $1, now(), now())
-returning id, email, created_at, updated_at
+insert into users (id, email, created_at, updated_at, hash_password)
+values (gen_random_uuid(), $1, now(), now(), $2)
+returning id, email, created_at, updated_at, hash_password
 `
 
-func (q *Queries) CreateUser(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, email)
+type CreateUserParams struct {
+	Email        string
+	HashPassword string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.HashPassword)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.HashPassword,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+select id, email, hash_password, created_at, updated_at from users where email = $1
+`
+
+type GetUserByEmailRow struct {
+	ID           uuid.UUID
+	Email        string
+	HashPassword string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i GetUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.HashPassword,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -33,9 +65,16 @@ const getUserById = `-- name: GetUserById :one
 SELECT id, email, created_at, updated_at FROM users where id = $1
 `
 
-func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
+type GetUserByIdRow struct {
+	ID        uuid.UUID
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (GetUserByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
-	var i User
+	var i GetUserByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Email,

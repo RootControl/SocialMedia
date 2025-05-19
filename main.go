@@ -14,7 +14,7 @@ import (
 
 const (
 	AppPathRoot = "./app/static"
-	Port = "8080"
+	Port        = "8080"
 )
 
 func main() {
@@ -24,13 +24,13 @@ func main() {
 	db, err := sql.Open("postgres", dbUrl)
 	if err != nil {
 		log.Printf("error loading database: %s", err.Error())
-		return 
+		return
 	}
 	defer db.Close()
 
 	serverMux := http.NewServeMux()
 	apiConfig := ac.NewApiConfig()
-	baseHandler := handlers.NewBaseHandler(db)
+	baseHandler := handlers.NewBaseHandler(db, os.Getenv("TOKEN_SECRET"))
 
 	// Front-end handlers
 	staticFilesHandler := http.StripPrefix("/app", http.FileServer(http.Dir(AppPathRoot)))
@@ -43,13 +43,14 @@ func main() {
 	// Back-end handlers
 	serverMux.HandleFunc("GET /api/healthz", baseHandler.AppReadinessHandler)
 	serverMux.HandleFunc("POST /api/users", baseHandler.CreateNewUserHandler)
+	serverMux.HandleFunc("POST /api/login", baseHandler.LoginHandler)
 
 	serverMux.HandleFunc("POST /api/messages", baseHandler.SaveUserMessageHandler)
 	serverMux.HandleFunc("GET /api/messages", baseHandler.GetMessagesHandler)
 	serverMux.HandleFunc("GET /api/messages/{id}", baseHandler.GetMessageByIdHandler)
 
 	server := http.Server{
-		Addr: ":" + Port,
+		Addr:    ":" + Port,
 		Handler: serverMux,
 	}
 

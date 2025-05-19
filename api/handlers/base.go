@@ -10,21 +10,22 @@ import (
 )
 
 type BaseHandler struct {
-	DbQueries *database.Queries
-	
+	DbQueries   *database.Queries
+	TokenSecret string
 }
 
 type BadRequest struct {
 	Error string `json:"error"`
 }
 
-func NewBaseHandler(dbConn *sql.DB) *BaseHandler {
+func NewBaseHandler(dbConn *sql.DB, tokenSecret string) *BaseHandler {
 	return &BaseHandler{
-		DbQueries: database.New(dbConn), 
+		DbQueries:   database.New(dbConn),
+		TokenSecret: tokenSecret,
 	}
 }
 
-func (b * BaseHandler) sendResponseToClient(w http.ResponseWriter, statusCode int, logMessage string, payload any) {
+func (b *BaseHandler) sendResponseToClient(w http.ResponseWriter, statusCode int, logMessage string, payload any) {
 	response, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("error parsing to JSON: %s\n", err.Error())

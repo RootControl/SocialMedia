@@ -5,7 +5,7 @@ import (
 )
 
 func (b *BaseHandler) AppReadinessHandler(w http.ResponseWriter, request *http.Request) {
-	health := struct { Status string }{
+	health := struct{ Status string }{
 		Status: "ok",
 	}
 

@@ -29,9 +29,9 @@ func (ac *ApiConfig) ApiHitsHandler(response http.ResponseWriter, request *http.
 		http.Error(response, "Error loading template", http.StatusInternalServerError)
 		return
 	}
-	
+
 	response.WriteHeader(http.StatusOK)
-	data := struct { Hits uint32 }{ Hits: ac.FileServerHits.Load() }
+	data := struct{ Hits uint32 }{Hits: ac.FileServerHits.Load()}
 
 	template.Execute(response, data)
 }
@@ -42,5 +42,3 @@ func (ac *ApiConfig) ResetHitsHandler(response http.ResponseWriter, request *htt
 	response.WriteHeader(http.StatusOK)
 	response.Write([]byte("Hits reset to 0"))
 }
-
-
